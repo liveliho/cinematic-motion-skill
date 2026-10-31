@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="{{LANG：zh-CN 或 en}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<!--
+══════════════════════ DIRECTOR'S BRIEF ══════════════════════
+片名 Title     : {{片名}}
+概念 Concept   : {{一句话视觉概念——用画面讲的那个点子，而不是内容描述}}
+风格 Preset    : {{P# 名称（如有品牌色覆盖，写明）}}
+色板 Palette   : {{--bg / --fg / --accent / --accent-2 的 hex}}
+字体 Type      : {{display / text / mono / 中文}}
+节奏 Tempo     : {{BPM}} BPM · 1 拍 = {{秒}}s · 总长 {{秒}}s · 画幅 {{16:9 | 9:16 | 1:1}}
+动势 Motion    : {{运动性格，三个词}}
+英雄时刻 Hero  : {{第几场 · 做什么}}
+══════════════════════════════════════════════════════════════
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="{{GOOGLE_FONTS_URL}}">
+<style>
+/* ══════ REEL BASE v1 · 不要修改 / DO NOT EDIT ══════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#000;overflow:hidden}
+body{color:var(--fg);font-family:var(--font-text);-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;user-select:none}
+.stage{position:absolute;left:50%;top:50%;width:var(--w,1920px);height:var(--h,1080px);transform:translate(-50%,-50%);transform-origin:50% 50%;overflow:hidden;background:var(--bg);isolation:isolate}
+.rig,.scene,.cam,.layer,.tx{position:absolute;inset:0}
+.scene{overflow:hidden}
+.scene:not(.on){display:none}
+.cam{transform-origin:50% 50%}
+.tx{pointer-events:none;z-index:40}
+.ch,.w{display:inline-block;white-space:pre}
+.mask{display:inline-block;overflow:hidden;vertical-align:top;padding:.12em .04em;margin:-.12em -.04em}
+.line{display:block;overflow:hidden;padding:.08em 0;margin:-.08em 0}
+.line>*{display:inline-block}
+.fx-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:50}
+.fx-grain{position:absolute;inset:-200px;pointer-events:none;z-index:60;opacity:var(--grain,.08);mix-blend-mode:overlay;background-size:256px 256px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>")}
+.fx-vignette{position:absolute;inset:0;pointer-events:none;z-index:61;background:radial-gradient(ellipse at 50% 50%,transparent 52%,rgba(0,0,0,var(--vignette,.5)) 100%)}
+.letterbox{position:absolute;inset:0;pointer-events:none;z-index:70}
+.letterbox::before,.letterbox::after{content:"";position:absolute;left:0;right:0;height:calc(var(--lb,0) * 1px);background:#000}
+.letterbox::before{top:0}.letterbox::after{bottom:0}
+.hud{position:absolute;inset:0;pointer-events:none;z-index:80}
+.reel-ui{position:fixed;left:0;right:0;bottom:0;z-index:999;padding:10px 20px 14px;opacity:0;transition:opacity .3s;color:#fff;font:12px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:linear-gradient(transparent,rgba(0,0,0,.65))}
+.reel-ui.show,.reel-paused .reel-ui{opacity:1}
+.reel-bar{position:relative;height:3px;margin:8px 0 10px;background:rgba(255,255,255,.25);cursor:pointer}
+.reel-bar::after{content:"";position:absolute;inset:-10px 0}
+.reel-bar i{position:absolute;inset:0;background:#fff;transform-origin:0 50%;transform:scaleX(0)}
+.reel-meta{display:flex;justify-content:space-between;gap:20px;opacity:.85}
+.reel-clean .reel-ui,.reel-render .reel-ui{display:none}
+/* ══════ /REEL BASE ══════ */
+
+/* ══════ DESIGN TOKENS（按导演方案填写） ══════ */
+:root{
+  --w:1920px; --h:1080px;   /* 画幅：16:9 = 1920×1080 · 9:16 = 1080×1920 · 1:1 = 1080×1080 */
+  --bg:{{#hex}}; --fg:{{#hex}}; --accent:{{#hex}}; --accent-2:{{#hex}};
+  --font-display:{{'Display 字体', 中文字体, 系统中文回退, serif/sans-serif}};
+  --font-text:{{'正文字体', 'PingFang SC', 'Microsoft YaHei', sans-serif}};
+  --font-mono:{{'Mono 字体', ui-monospace, Consolas, monospace}};
+  --grain:{{0–.16}}; --vignette:{{0–.8}}; --lb:{{0 或 138（2.39:1 遮幅）}};
+}
+
+/* ══════ SCENE STYLES ══════ */
+{{场景样式：按场景分组，每组以 /* s1 · 标题 */ 开头}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="rig">
+    <!-- ══ SCENES：每个分镜一个 section，id 与 STORYBOARD 一致，所有内容放进 .cam ══
+    <section class="scene" id="s1">
+      <div class="cam">
+        <div class="layer bg">背景层：色块 / 网格 / 纹理 / 环境光</div>
+        <div class="layer main">主体层：大字排版 / 主形状</div>
+        <div class="layer detail">细节层：编号 / 标签 / 细线 / 坐标</div>
+      </div>
+    </section>
+    -->
+{{SCENES}}
+    <!-- ══ 转场层：全局擦除面板 / 遮罩等（不需要就留空） ══ -->
+    <div class="tx">{{TRANSITION_ELEMENTS}}</div>
+    <div class="fx-flash"></div>
+  </div>
+  <div class="fx-grain"></div>
+  <div class="fx-vignette"></div>
+  <div class="letterbox"></div>
+  <div class="hud">{{HUD：时间码 data-reel="timecode" / 场景计数 data-reel="scene" / 进度 data-reel="progress" / 标签；极简风格可留空}}</div>
+</div>
+
+<script>
+/* ══════ REEL ENGINE v1 · 不要修改 / DO NOT EDIT ══════ */
+(function (global) {
+  'use strict';
+  const PI = Math.PI, LOG = [];
+  const warn = m => { if (!LOG.includes(m)) { LOG.push(m); console.warn('[REEL] ' + m); } };
+  const clamp01 = v => v < 0 ? 0 : v > 1 ? 1 : v;
+  const pad = n => String(n).padStart(2, '0');
+
+  /* ── easing ── */
+  const EASE = { linear: t => t, none: t => t };
+  [['quad', 2], ['cubic', 3], ['quart', 4], ['quint', 5]].forEach(([k, n], i) => {
+    const fi = t => Math.pow(t, n), fo = t => 1 - Math.pow(1 - t, n),
+      fio = t => t < .5 ? Math.pow(2 * t, n) / 2 : 1 - Math.pow(2 - 2 * t, n) / 2;
+    [k, 'power' + (i + 1)].forEach(nm => { EASE[nm + '.in'] = fi; EASE[nm + '.out'] = fo; EASE[nm + '.inOut'] = fio; });
+  });
+  const C1 = 1.70158, C2 = C1 * 1.525, C3 = C1 + 1, C4 = 2 * PI / 3;
+  Object.assign(EASE, {
+    'sine.in': t => 1 - Math.cos(t * PI / 2),
+    'sine.out': t => Math.sin(t * PI / 2),
+    'sine.inOut': t => -(Math.cos(PI * t) - 1) / 2,
+    'expo.in': t => t <= 0 ? 0 : Math.pow(2, 10 * t - 10),
+    'expo.out': t => t >= 1 ? 1 : 1 - Math.pow(2, -10 * t),
+    'expo.inOut': t => t <= 0 ? 0 : t >= 1 ? 1 : t < .5 ? Math.pow(2, 20 * t - 10) / 2 : (2 - Math.pow(2, -20 * t + 10)) / 2,
+    'circ.in': t => 1 - Math.sqrt(1 - t * t),
+    'circ.out': t => Math.sqrt(1 - (t - 1) * (t - 1)),
+    'circ.inOut': t => t < .5 ? (1 - Math.sqrt(1 - 4 * t * t)) / 2 : (Math.sqrt(1 - Math.pow(2 - 2 * t, 2)) + 1) / 2,
+    'back.in': t => C3 * t * t * t - C1 * t * t,
+    'back.out': t => 1 + C3 * Math.pow(t - 1, 3) + C1 * Math.pow(t - 1, 2),
+    'back.inOut': t => t < .5 ? (Math.pow(2 * t, 2) * ((C2 + 1) * 2 * t - C2)) / 2 : (Math.pow(2 * t - 2, 2) * ((C2 + 1) * (2 * t - 2) + C2) + 2) / 2,
+    'elastic.in': t => t <= 0 ? 0 : t >= 1 ? 1 : -Math.pow(2, 10 * t - 10) * Math.sin((t * 10 - 10.75) * C4),
+    'elastic.out': t => t <= 0 ? 0 : t >= 1 ? 1 : Math.pow(2, -10 * t) * Math.sin((t * 10 - .75) * C4) + 1,
+  });
+  function bezier(x1, y1, x2, y2) {
+    const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
+    const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+    const X = t => ((ax * t + bx) * t + cx) * t, Y = t => ((ay * t + by) * t + cy) * t, dX = t => (3 * ax * t + 2 * bx) * t + cx;
+    return x => {
+      if (x <= 0) return 0; if (x >= 1) return 1;
+      let t = x;
+      for (let i = 0; i < 8; i++) { const e = X(t) - x, d = dX(t); if (Math.abs(e) < 1e-6) return Y(t); if (Math.abs(d) < 1e-6) break; t -= e / d; }
+      let lo = 0, hi = 1; t = x;
+      for (let i = 0; i < 40; i++) { const v = X(t); if (Math.abs(v - x) < 1e-6) break; if (v < x) lo = t; else hi = t; t = (lo + hi) / 2; }
+      return Y(t);
+    };
+  }
+  Object.assign(EASE, {
+    snap: bezier(.85, 0, .15, 1),
+    glide: bezier(.16, 1, .3, 1),
+    whip: bezier(.95, 0, .05, 1),
+    punch: bezier(.34, 1.56, .64, 1),
+  });
+  function ease(e) {
+    if (typeof e === 'function') return e;
+    if (!e) return EASE['expo.out'];
+    if (EASE[e]) return EASE[e];
+    const m = /^(?:cb|cubic-bezier)\(([^)]+)\)$/.exec(e);
+    if (m) { const a = m[1].split(',').map(Number); return (EASE[e] = bezier(a[0], a[1], a[2], a[3])); }
+    warn('未知 ease: "' + e + '"（已改用 expo.out）');
+    return EASE['expo.out'];
+  }
+
+  /* ── deterministic random ── */
+  function rand(n) {
+    let t = (Math.floor(n) * 2654435761 + 0x6D2B79F5) >>> 0;
+    t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  }
+  function rng(seed) {
+    let a = (seed >>> 0) || 1;
+    return () => { a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  }
+
+  /* ── values ── */
+  const NUM = /-?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?/gi;
+  const TF = { x: 'px', y: 'px', z: 'px', rotate: 'deg', rotateX: 'deg', rotateY: 'deg', skewX: 'deg', skewY: 'deg', scale: '', scaleX: '', scaleY: '' };
+  const UNITLESS = /^(opacity|z-index|font-weight|line-height|flex-grow|flex-shrink|order|--.*)$/;
+  const kebab = k => k.startsWith('--') ? k : k.replace(/[A-Z]/g, m => '-' + m.toLowerCase());
+  const hex2rgba = s => s.replace(/#([0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3,4})\b/gi, (_, h) => {
+    if (h.length < 6) h = h.split('').map(c => c + c).join('');
+    const n = parseInt(h.slice(0, 6), 16), a = h.length === 8 ? parseInt(h.slice(6), 16) / 255 : 1;
+    return 'rgba(' + (n >> 16 & 255) + ',' + (n >> 8 & 255) + ',' + (n & 255) + ',' + +a.toFixed(3) + ')';
+  });
+  function parse(v) { const s = hex2rgba(String(v)); return { raw: s, nums: (s.match(NUM) || []).map(Number), parts: s.split(NUM) }; }
+  function norm(key, v, other) {
+    if (typeof v !== 'number') return String(v);
+    if (typeof other === 'string') { const o = parse(other); if (o.nums.length === 1) return o.parts[0] + v + o.parts[1]; }
+    if (key in TF) return v + TF[key];
+    if (key[0] === '@' || UNITLESS.test(kebab(key))) return String(v);
+    return v + 'px';
+  }
+  function unify(f, t) {
+    if (f.nums.length !== t.nums.length || f.parts.length !== t.parts.length) return false;
+    const U = /^[a-z%]*/i;
+    for (let i = 0; i < t.parts.length; i++) {
+      if (f.parts[i] === t.parts[i]) continue;
+      const fu = f.parts[i].match(U)[0], tu = t.parts[i].match(U)[0];
+      if (!i || f.parts[i].slice(fu.length) !== t.parts[i].slice(tu.length)) return false;
+      if (!fu && f.nums[i - 1] === 0) f.parts[i] = t.parts[i];
+      else if (!tu && t.nums[i - 1] === 0) t.parts[i] = f.parts[i];
+      else return false;
+    }
+    return true;
+  }
+  function mkTween(key, from, to, start, dur, ez) {
+    const f = from === undefined ? null : parse(norm(key, from, to));
+    const t = parse(norm(key, to, from));
+    const ok = !!f && unify(f, t);
+    if (f && !ok) warn('属性 "' + key + '" 的起止值结构不同，无法补间（将直接跳变）: ' + f.raw + ' → ' + t.raw);
+    return { key, start, dur, ease: ez, f, t, ok };
+  }
+  function lerp(tw, p) {
+    if (!tw.f) return tw.t.raw;
+    if (!tw.ok) return p < 1 ? tw.f.raw : tw.t.raw;
+    const a = tw.f.nums, b = tw.t.nums, P = tw.t.parts;
+    let s = P[0];
+    for (let i = 0; i < b.length; i++) s += +(a[i] + (b[i] - a[i]) * p).toFixed(4) + P[i + 1];
+    return s;
+  }
+  function buildTf(o) {
+    let s = 'translate(' + (o.x || '0px') + ',' + (o.y || '0px') + ')';
+    if (o.z) s += ' translateZ(' + o.z + ')';
+    if (o.rotateX) s += ' rotateX(' + o.rotateX + ')';
+    if (o.rotateY) s += ' rotateY(' + o.rotateY + ')';
+    if (o.rotate) s += ' rotate(' + o.rotate + ')';
+    if (o.skewX) s += ' skewX(' + o.skewX + ')';
+    if (o.skewY) s += ' skewY(' + o.skewY + ')';
+    const k = o.scale == null ? 1 : parseFloat(o.scale);
+    const sx = k * (o.scaleX == null ? 1 : parseFloat(o.scaleX)), sy = k * (o.scaleY == null ? 1 : parseFloat(o.scaleY));
+    if (sx !== 1 || sy !== 1) s += ' scale(' + sx + ',' + sy + ')';
+    return s;
+  }
+
+  /* ── targets / stagger / split ── */
+  function toEls(target, root) {
+    if (target == null) return [];
+    if (typeof target === 'string') {
+      const r = Array.from((root || document).querySelectorAll(target));
+      if (!r.length) warn('选择器没有匹配到元素: "' + target + '"' + (root && root.id ? '（在 #' + root.id + ' 内）' : ''));
+      return r;
+    }
+    if (target.nodeType === 1) return [target];
+    const r = Array.from(target).filter(e => e && e.nodeType === 1);
+    if (!r.length) warn('传入的元素列表为空');
+    return r;
+  }
+  function staggerOffsets(n, st) {
+    if (!st) return new Array(n).fill(0);
+    const o = typeof st === 'number' ? { each: st } : st;
+    const each = o.each != null ? o.each : (o.amount || 0) / Math.max(1, n - 1);
+    const from = o.from == null ? 'start' : o.from, mid = (n - 1) / 2;
+    let d;
+    if (from === 'end') d = i => n - 1 - i;
+    else if (from === 'center') d = i => Math.abs(i - mid);
+    else if (from === 'edges') d = i => mid - Math.abs(i - mid);
+    else if (from === 'random') {
+      const r = rng(o.seed || 7), rank = [];
+      Array.from({ length: n }, (_, i) => [r(), i]).sort((a, b) => a[0] - b[0]).forEach((x, k) => { rank[x[1]] = k; });
+      d = i => rank[i];
+    } else if (typeof from === 'number') d = i => Math.abs(i - from);
+    else d = i => i;
+    const arr = Array.from({ length: n }, (_, i) => d(i)), min = Math.min.apply(null, arr);
+    return arr.map(v => (v - min) * each);
+  }
+  function split(target, opts) {
+    opts = typeof opts === 'string' ? { by: opts } : (opts || {});
+    const by = opts.by || 'chars', out = [];
+    toEls(target).forEach(el => {
+      if (el.__reelSplit) { out.push.apply(out, el.__reelSplit); return; }
+      const text = el.textContent, made = [];
+      el.textContent = '';
+      el.setAttribute('aria-label', text);
+      (by === 'words' ? text.split(/(\s+)/) : Array.from(text)).forEach(u => {
+        if (u === '') return;
+        if (/^\s+$/.test(u)) { el.appendChild(document.createTextNode(u)); return; }
+        const sp = document.createElement('span');
+        sp.className = by === 'words' ? 'w' : 'ch';
+        sp.textContent = u;
+        sp.setAttribute('aria-hidden', 'true');
+        if (opts.mask) { const m = document.createElement('span'); m.className = 'mask'; m.appendChild(sp); el.appendChild(m); }
+        else el.appendChild(sp);
+        made.push(sp);
+      });
+      el.__reelSplit = made;
+      out.push.apply(out, made);
+    });
+    return out;
+  }
+
+  /* ── scope: 场景内 API（时间相对场景起点，选择器限定在场景内） ── */
+  function Scope(tl, offset, root, info) {
+    this.tl = tl; this.offset = offset; this.root = root;
+    this.beat = tl.beat; this.bar = tl.bar;
+    if (info) Object.assign(this, info);
+  }
+  const S = Scope.prototype;
+  S.q = function (sel) { return toEls(sel, this.root); };
+  S.fromTo = function (targets, from, to, o) { this.tl._tween(toEls(targets, this.root), from || {}, to || {}, o || {}, this.offset); return this; };
+  S.set = function (targets, props, o) {
+    const at = typeof o === 'number' ? o : (o && o.at) || 0;
+    this.tl._tween(toEls(targets, this.root), null, props || {}, { at, dur: 0 }, this.offset); return this;
+  };
+  S.call = function (fn, o) { o = o || {}; this.tl.calls.push({ fn, start: this.offset + (+o.at || 0), dur: +o.dur || 0, last: undefined, root: this.root }); this.tl._dirty = true; return this; };
+  S.draw = function (targets, o) {
+    o = o || {};
+    const list = toEls(targets, this.root);
+    list.forEach(el => { el.setAttribute('pathLength', '1'); el.style.strokeDasharray = '1 1'; });
+    return o.erase ? this.fromTo(list, { strokeDashoffset: 0 }, { strokeDashoffset: -1 }, o)
+                   : this.fromTo(list, { strokeDashoffset: 1 }, { strokeDashoffset: 0 }, o);
+  };
+  S.count = function (target, o) {
+    o = o || {};
+    const list = toEls(target, this.root), ez = ease(o.ease || 'expo.out');
+    const a = +o.from || 0, b = +o.to || 0, dec = o.decimals || 0;
+    const fmt = o.format || (v => v.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec, useGrouping: o.group !== false }));
+    return this.call(p => { const v = fmt(a + (b - a) * ez(p)); list.forEach(e => { e.textContent = (o.prefix || '') + v + (o.suffix || ''); }); }, o);
+  };
+  S.scramble = function (target, o) {
+    o = o || {};
+    const list = toEls(target, this.root), finals = list.map(e => Array.from(e.textContent));
+    const g = Array.from(o.chars || 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&@$*+=/<>'), trail = o.trail == null ? 6 : o.trail;
+    const seed = (o.seed || 1) * 7919, rate = o.rate || 20, build = o.mode === 'build';
+    return this.call((p, lt) => {
+      const fr = Math.floor(Math.max(0, lt) * rate);
+      list.forEach((e, k) => {
+        if (lt < 0) { e.textContent = ''; return; }
+        const txt = finals[k], n = txt.length, r = p * (n + trail) - trail;
+        let s = '';
+        for (let i = 0; i < n; i++) {
+          if (/\s/.test(txt[i]) || i < r) s += txt[i];
+          else if (!build || i < r + trail) s += g[Math.floor(rand(seed + fr * 131 + i * 17 + k * 1009) * g.length)];
+        }
+        e.textContent = s;
+      });
+    }, o);
+  };
+  S.type = function (target, o) {
+    o = o || {};
+    const list = toEls(target, this.root), finals = list.map(e => Array.from(e.textContent));
+    const caret = o.caret == null ? '▍' : o.caret;
+    return this.call(p => {
+      list.forEach((e, k) => { const n = finals[k].length; e.textContent = finals[k].slice(0, Math.round(p * n)).join('') + (p > 0 && p < 1 ? caret : ''); });
+    }, o);
+  };
+  S.flash = function (o) {
+    o = typeof o === 'number' ? { at: o } : (o || {});
+    const el = this.tl.flashEl;
+    if (!el) { warn('找不到 .fx-flash 元素'); return this; }
+    const at = +o.at || 0, inn = +o.in || 0, out = o.out == null ? .18 : +o.out, peak = o.peak == null ? 1 : o.peak;
+    if (o.color) this.set(el, { background: o.color }, at - inn);
+    if (inn > 0) this.fromTo(el, { opacity: 0 }, { opacity: peak }, { at: at - inn, dur: inn, ease: 'expo.in' });
+    return this.fromTo(el, { opacity: peak }, { opacity: 0 }, { at, dur: out, ease: o.ease || 'expo.out' });
+  };
+  S.shake = function (o) {
+    o = typeof o === 'number' ? { at: o } : (o || {});
+    this.tl.fx.push({ type: 'shake', start: this.offset + (+o.at || 0), dur: o.dur || .4, amp: o.amp || 14, freq: o.freq || 30, seed: this.tl.fx.length * 101 });
+    return this;
+  };
+  S.glitch = function (o) {
+    o = typeof o === 'number' ? { at: o } : (o || {});
+    this.tl.fx.push({ type: 'glitch', start: this.offset + (+o.at || 0), dur: o.dur || .3, amp: o.amp || 40, freq: o.freq || 24, seed: this.tl.fx.length * 101 });
+    return this;
+  };
+
+  /* ── timeline ── */
+  const CAM = {
+    push: p => [1 + .06 * p, 0, 0], pull: p => [1.08 - .08 * p, 0, 0],
+    left: p => [1.05, 40 - 80 * p, 0], right: p => [1.05, -40 + 80 * p, 0],
+    rise: p => [1.05, 0, 30 - 60 * p], fall: p => [1.05, 0, -30 + 60 * p],
+  };
+  function Timeline(o) {
+    o = o || {};
+    this.duration = +o.duration || 30; this.bpm = +o.bpm || 120; this.fps = +o.fps || 30; this.loop = o.loop !== false;
+    this.beat = n => (n == null ? 1 : n) * 60 / this.bpm;
+    this.bar = n => (n == null ? 1 : n) * 240 / this.bpm;
+    this.tracks = new Map(); this.calls = []; this.scenes = []; this.fx = [];
+    this.t = 0; this.playing = false; this._dirty = true;
+    this.stage = document.querySelector('.stage'); this.rig = document.querySelector('.rig');
+    this.grain = document.querySelector('.fx-grain'); this.flashEl = document.querySelector('.fx-flash');
+    this.hud = ['timecode', 'scene', 'title', 'progress'].reduce((h, k) => (h[k] = Array.from(document.querySelectorAll('[data-reel="' + k + '"]')), h), {});
+    Scope.call(this, this, 0, document);
+    if (this.flashEl) this._tween([this.flashEl], null, { opacity: 0 }, { at: -1e6, dur: 0 }, 0);
+  }
+  Timeline.prototype = Object.create(S);
+  Timeline.prototype.constructor = Timeline;
+  Timeline.prototype._tween = function (list, from, to, o, offset) {
+    if (!list.length) return;
+    const start = offset + (+o.at || 0), dur = o.dur == null ? .8 : Math.max(0, +o.dur), ez = ease(o.ease);
+    const offs = staggerOffsets(list.length, o.stagger), n = list.length;
+    if (from) for (const k in from) if (!(k in to)) warn('fromTo 的 from 里有 to 没有的属性: ' + k);
+    list.forEach((el, i) => {
+      let rec = this.tracks.get(el);
+      if (!rec) { rec = { props: new Map(), tf: {}, cache: new Map() }; this.tracks.set(el, rec); }
+      for (const key in to) {
+        let tv = to[key], fv = from ? from[key] : undefined;
+        if (typeof tv === 'function') tv = tv(i, el, n);
+        if (typeof fv === 'function') fv = fv(i, el, n);
+        if (from && fv === undefined) warn('fromTo 缺少起始值: ' + key + '（已按 set 处理）');
+        if (!rec.props.has(key)) rec.props.set(key, []);
+        rec.props.get(key).push(mkTween(key, fv, tv, start + offs[i], dur, ez));
+      }
+    });
+    this._dirty = true;
+  };
+  Timeline.prototype.storyboard = function (list) {
+    this.scenes = (list || []).map((s, i) => {
+      const el = document.getElementById(s.id), cam = s.cam == null ? 'push' : s.cam;
+      if (!el) warn('STORYBOARD 里的场景找不到元素: #' + s.id);
+      if (cam !== 'none' && !CAM[cam]) warn('未知 cam: "' + cam + '"');
+      return Object.assign({}, s, { index: i, el, cam, _cam: el ? el.querySelector(':scope > .cam') : null, _on: undefined, _built: 0 });
+    });
+    document.querySelectorAll('.scene').forEach(el => { if (!this.scenes.some(s => s.el === el)) warn('场景元素没有写进 STORYBOARD: #' + el.id); });
+    return this;
+  };
+  Timeline.prototype.scene = function (id, build) {
+    const s = this.scenes.find(x => x.id === id);
+    if (!s) { warn('tl.scene() 找不到分镜: ' + id); return this; }
+    s._built++;
+    build(new Scope(this, s.start, s.el || document, { id, el: s.el, start: s.start, end: s.end, dur: s.end - s.start }));
+    return this;
+  };
+  Timeline.prototype.render = function (t) {
+    if (this._dirty) {
+      this.tracks.forEach(rec => rec.props.forEach(l => l.sort((a, b) => a.start - b.start)));
+      this.calls.sort((a, b) => a.start - b.start);
+      this._dirty = false;
+    }
+    this.t = t;
+    let cur = null;
+    for (const s of this.scenes) {
+      const on = t >= s.start && (t < s.end || (t >= this.duration && s.end >= this.duration - 1e-6));
+      if (s._on !== on) { s._on = on; if (s.el) s.el.classList.toggle('on', on); }
+      if (on) {
+        cur = s;
+        const fn = CAM[s.cam];
+        if (fn && s._cam) {
+          const c = fn(clamp01((t - s.start) / Math.max(.001, s.end - s.start)));
+          const v = 'translate(' + c[1].toFixed(2) + 'px,' + c[2].toFixed(2) + 'px) scale(' + c[0].toFixed(4) + ')';
+          if (v !== s._camV) { s._cam.style.transform = v; s._camV = v; }
+        }
+      }
+    }
+    this.tracks.forEach((rec, el) => {
+      let tfDirty = false;
+      rec.props.forEach((list, key) => {
+        let tw = null;
+        for (let i = list.length - 1; i >= 0; i--) if (list[i].start <= t) { tw = list[i]; break; }
+        const v = tw ? lerp(tw, tw.ease(tw.dur > 0 ? clamp01((t - tw.start) / tw.dur) : 1)) : (list[0].f ? list[0].f.raw : null);
+        if (rec.cache.get(key) === v) return;
+        rec.cache.set(key, v);
+        if (key in TF) { rec.tf[key] = v; tfDirty = true; }
+        else if (key[0] === '@') { if (v === null) el.removeAttribute(key.slice(1)); else el.setAttribute(key.slice(1), v); }
+        else { const k = kebab(key); if (v === null) el.style.removeProperty(k); else el.style.setProperty(k, v); }
+      });
+      if (tfDirty) el.style.transform = buildTf(rec.tf);
+    });
+    const before = [], after = [];
+    this.calls.forEach(c => (t < c.start ? before : after).push(c));
+    before.reverse().concat(after).forEach(c => {
+      const p = c.dur > 0 ? clamp01((t - c.start) / c.dur) : (t >= c.start ? 1 : 0);
+      if (p !== c.last) { c.last = p; c.fn(p, t - c.start); }
+    });
+    if (this.rig) {
+      let x = 0, y = 0, sk = 0, filt = '';
+      this.fx.forEach(f => {
+        if (t < f.start || t > f.start + f.dur) return;
+        const p = (t - f.start) / f.dur, fr = Math.floor(t * f.freq);
+        if (f.type === 'shake') { const k = f.amp * (1 - p) * (1 - p); x += (rand(f.seed + fr * 3) - .5) * 2 * k; y += (rand(f.seed + fr * 3 + 1) - .5) * 2 * k; }
+        else {
+          const r = rand(f.seed + fr * 7);
+          x += (rand(f.seed + fr * 7 + 1) - .5) * f.amp; sk += (rand(f.seed + fr * 7 + 2) - .5) * 14;
+          filt = r < .22 ? 'invert(1)' : r < .45 ? 'hue-rotate(90deg) saturate(3)' : r < .55 ? 'contrast(3) grayscale(1)' : filt;
+        }
+      });
+      const tf = (x || y || sk) ? 'translate(' + x.toFixed(2) + 'px,' + y.toFixed(2) + 'px) skewX(' + sk.toFixed(2) + 'deg)' : '';
+      if (tf !== this._rigTf) { this.rig.style.transform = tf; this._rigTf = tf; }
+      if (filt !== this._rigF) { this.rig.style.filter = filt; this._rigF = filt; }
+    }
+    if (this.grain) {
+      const g = Math.floor(t * 24), v = 'translate(' + Math.round(-rand(g * 2) * 200) + 'px,' + Math.round(-rand(g * 2 + 1) * 200) + 'px)';
+      if (v !== this._gr) { this.grain.style.transform = v; this._gr = v; }
+    }
+    const fr = Math.floor(t * this.fps + 1e-6), ss = Math.floor(fr / this.fps);
+    const txt = {
+      timecode: pad(Math.floor(ss / 60)) + ':' + pad(ss % 60) + ':' + pad(fr % this.fps),
+      scene: cur ? pad(cur.index + 1) + ' / ' + pad(this.scenes.length) : '',
+      title: cur && cur.title ? cur.title : '',
+    };
+    ['timecode', 'scene', 'title'].forEach(k => this.hud[k].forEach(e => { if (e.textContent !== txt[k]) e.textContent = txt[k]; }));
+    this.hud.progress.forEach(e => { e.style.transform = 'scaleX(' + (t / this.duration).toFixed(4) + ')'; });
+    if (this._ui) this._ui(t);
+  };
+  Timeline.prototype._mountUI = function () {
+    const ui = document.createElement('div');
+    ui.className = 'reel-ui';
+    ui.innerHTML = '<div class="reel-bar"><i></i></div><div class="reel-meta"><b></b><span>SPACE 播放/暂停 · ← → 跳 1 秒（Shift 跳 1 小节）· 0 从头 · H 隐藏控制条</span></div>';
+    document.body.appendChild(ui);
+    const bar = ui.querySelector('.reel-bar'), fill = bar.firstChild, time = ui.querySelector('b'), root = document.documentElement;
+    this._ui = t => { fill.style.transform = 'scaleX(' + (t / this.duration).toFixed(4) + ')'; time.textContent = t.toFixed(2) + ' / ' + this.duration.toFixed(2) + 's'; root.classList.toggle('reel-paused', !this.playing); };
+    let hide;
+    const show = () => { ui.classList.add('show'); clearTimeout(hide); hide = setTimeout(() => ui.classList.remove('show'), 1800); };
+    addEventListener('mousemove', show);
+    bar.addEventListener('pointerdown', e => { const r = bar.getBoundingClientRect(); this.playing = false; this.render(clamp01((e.clientX - r.left) / r.width) * this.duration); e.stopPropagation(); });
+    addEventListener('keydown', e => {
+      const step = e.shiftKey ? this.bar() : 1;
+      if (e.code === 'Space') { this.playing = !this.playing; e.preventDefault(); }
+      else if (e.key === 'ArrowRight') this.render(Math.min(this.duration, this.t + step));
+      else if (e.key === 'ArrowLeft') this.render(Math.max(0, this.t - step));
+      else if (e.key === '0' || e.key === 'Home') { this.render(0); this.playing = true; }
+      else if (e.key === 'h' || e.key === 'H') root.classList.toggle('reel-clean');
+      else return;
+      this.render(this.t); show();
+    });
+    if (this.stage) this.stage.addEventListener('click', () => { this.playing = !this.playing; this.render(this.t); show(); });
+  };
+  Timeline.prototype.start = function () {
+    const q = new URLSearchParams(location.search), renderMode = q.has('render');
+    this.scenes.forEach(s => { if (!s._built) warn('分镜 ' + s.id + ' 没有写 tl.scene() 动画'); });
+    const last = this.scenes[this.scenes.length - 1];
+    if (last && Math.abs(last.end - this.duration) > .01) warn('duration(' + this.duration + ') 与最后一场 end(' + last.end + ') 不一致');
+    const fit = () => { if (this.stage) this.stage.style.transform = 'translate(-50%,-50%) scale(' + Math.min(innerWidth / this.stage.offsetWidth, innerHeight / this.stage.offsetHeight) + ')'; };
+    fit(); addEventListener('resize', fit);
+    if (renderMode) document.documentElement.classList.add('reel-render'); else this._mountUI();
+    this.render(0);
+    let ready; const readyP = new Promise(r => { ready = r; });
+    const self = this;
+    global.__reel = {
+      get duration() { return self.duration; }, fps: this.fps, bpm: this.bpm, log: LOG, ready: readyP,
+      seek(t) { self.playing = false; self.render(t); },
+      play() { self.playing = true; },
+      report() {
+        return {
+          duration: self.duration, bpm: self.bpm, fps: self.fps, tracks: self.tracks.size, calls: self.calls.length, log: LOG.slice(),
+          scenes: self.scenes.map(s => {
+            let n = 0; if (s.el) self.tracks.forEach((r, el) => { if (s.el.contains(el)) n++; });
+            const calls = self.calls.filter(c => s.el && c.root === s.el).length;
+            return { id: s.id, start: s.start, end: s.end, title: s.title || '', technique: s.technique || '', transition: s.transition || '', cam: s.cam, built: s._built, animated: n + calls };
+          }),
+        };
+      },
+    };
+    const fonts = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+    Promise.race([fonts, new Promise(r => setTimeout(r, 3000))]).then(() => {
+      if (q.has('t')) { this.playing = false; this.render(parseFloat(q.get('t')) || 0); }
+      else { this.playing = !renderMode && q.get('play') !== '0'; this.render(0); }
+      ready(true);
+      let prev = performance.now();
+      const tick = now => {
+        const dt = Math.min(.1, (now - prev) / 1000); prev = now;
+        if (this.playing) {
+          let t = this.t + dt;
+          if (t >= this.duration) { if (this.loop) t %= this.duration; else { t = this.duration; this.playing = false; } }
+          this.render(t);
+        }
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+    return this;
+  };
+
+  global.REEL = { version: 1, timeline: o => new Timeline(o), split, rand, rng, ease, EASE, log: LOG, $: sel => Array.from(document.querySelectorAll(sel)) };
+})(window);
+/* ══════ /REEL ENGINE ══════ */
+</script>
+<script>
+/* ══════ STORYBOARD（与分镜表一致；所有 start/end 用拍数 × B 表示，落在拍点上） ══════ */
+const BPM = {{BPM}};
+const B = 60 / BPM;   // 1 拍的秒数；1 小节 = 4 * B
+const STORYBOARD = [
+  // { id:'s1', start: 0*B, end: 8*B, title:'开场', technique:'T03 Scale Slam', transition:'X04 Shutter', cam:'push' },
+{{STORYBOARD_ROWS}}
+];
+
+/* ══════ TIMELINE ══════ */
+const tl = REEL.timeline({ duration: {{总时长 = 最后一场 end}}, bpm: BPM, fps: 30, loop: true });
+tl.storyboard(STORYBOARD);
+
+{{SCENE_BUILDERS：每个分镜一个 tl.scene('sN', s => { ... })；全局转场写在 tl 上}}
+
+tl.start();
+</script>
+</body>
+</html>
