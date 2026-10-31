@@ -2,6 +2,8 @@
 
 # 🎬 cinematic-motion
 
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-D4FF00?style=for-the-badge&labelColor=0B0B0B)](LICENSE) [![Claude Skill](https://img.shields.io/badge/Claude-Skill-FF2E88?style=for-the-badge&labelColor=0B0B0B)](cinematic-motion/SKILL.md) [![Release](https://img.shields.io/github/v/release/liveliho/cinematic-motion-skill?style=for-the-badge&color=F4F4F0&labelColor=0B0B0B)](https://github.com/liveliho/cinematic-motion-skill/releases/latest) [![Live Demo](https://img.shields.io/badge/Live-Demo-D4FF00?style=for-the-badge&labelColor=0B0B0B)](https://liveliho.github.io/cinematic-motion-skill/examples/motion-manifesto.html)
+
 **让 AI 稳定做出「专业运动设计师水准」的电影级动态图形 —— 一个 Claude Skill**
 
 大胆排版 · 几何形状 · 卡点节奏 · 动态转场 · 电影质感<br>
@@ -254,3 +256,15 @@ Google Fonts 在部分网络下加载不到。skill 要求每个字体栈都带�
 
 **为什么不用 GSAP 等动画库？**
 内置引擎是确定性的：任意时刻的画面只由时间决定。所以才能逐帧截图质检、随意拖动时间轴、导出与浏览器播放完全一致的视频，而且离线可用、没有版本漂移。
+
+## 许可证
+
+本项目以 [Apache License 2.0](LICENSE) 开源——与 Kubernetes、TensorFlow、Android 相同的许可证。
+
+- ✅ 可自由使用、修改、分发，包括商业用途
+- ✅ 包含明确的专利授权，使用者免受贡献者的专利诉讼
+- 📌 分发时需保留 [LICENSE](LICENSE) 与 [NOTICE](NOTICE)，并注明你做过的修改
+
+用本 skill 生成的影片，其中的创意内容（文案、设计、动画编排）归你所有；影片里内置的 REEL 引擎代码仍属于本项目，适用 Apache 2.0。
+
+<div align="center"><sub>Copyright © 2026 liveliho · Made with Claude</sub></div>

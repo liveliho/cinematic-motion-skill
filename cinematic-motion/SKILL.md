@@ -1,5 +1,6 @@
 ---
 name: cinematic-motion
+license: Apache-2.0
 description: 生成电影感、专业运动设计师水准的动态图形短片（Motion Graphics）——大胆排版、几何形状、有节拍的运动、动态转场与视觉特效，输出为单文件 HTML（浏览器即播，可逐帧导出 MP4）。当用户想要电影感或大片感的动画、动态图形、动效短片、片头片尾、开场动画、title sequence、kinetic typography（动态文字、文字动画）、品牌或产品宣传动画、logo 演绎、发布会或活动开场、倒计时、预告片式文字动画、竖版动态海报（抖音、视频号、Reels），或说“让这段文案动起来”“做得像专业动效设计师做的”“motion graphics / promo animation / cinematic intro / logo reveal”时，务必使用本 skill，即使用户没有明确说“动态图形”。不适用于：网页 UI 交互动效（hover、滚动动画）、静态海报、数据图表、剪辑真实视频素材、3D 建模。
 ---
 
