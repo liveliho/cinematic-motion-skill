@@ -7,11 +7,11 @@
 大胆排版 · 几何形状 · 卡点节奏 · 动态转场 · 电影质感<br>
 输出单文件 HTML，浏览器即播，可逐帧导出 MP4
 
-<a href="https://github.com/liveliho/cinematic-motion-skill/releases/download/v1.0.0/motion-manifesto.mp4"><img src="docs/media/preview.gif" alt="样片预览：运动宣言 MOTION MANIFESTO" width="100%"></a>
+<a href="https://liveliho.github.io/cinematic-motion-skill/examples/motion-manifesto.html"><img src="docs/media/preview.gif" alt="样片预览：运动宣言 MOTION MANIFESTO" width="100%"></a>
 
-**▶ [下载完整 30 秒样片（MP4 · 1080p · 12.8 MB）](https://github.com/liveliho/cinematic-motion-skill/releases/download/v1.0.0/motion-manifesto.mp4)** &nbsp;·&nbsp; [样片 HTML 源文件](examples/motion-manifesto.html) &nbsp;·&nbsp; [下载 skill 包](https://github.com/liveliho/cinematic-motion-skill/releases/latest)
+**▶ [在线播放样片](https://liveliho.github.io/cinematic-motion-skill/examples/motion-manifesto.html)** &nbsp;·&nbsp; [下载 MP4（1080p · 12.8 MB）](https://github.com/liveliho/cinematic-motion-skill/releases/download/v1.0.0/motion-manifesto.mp4) &nbsp;·&nbsp; [HTML 源文件](examples/motion-manifesto.html) &nbsp;·&nbsp; [下载 skill 包](https://github.com/liveliho/cinematic-motion-skill/releases/latest)
 
-<sub>上面的 GIF 是精华剪辑（已去掉胶片颗粒以压缩体积）；完整版与原画质请看 MP4。</sub>
+<sub>上面的 GIF 是精华剪辑（已去掉胶片颗粒以压缩体积）；完整版请在线播放（空格暂停，← → 拖动），或下载 MP4。</sub>
 
 </div>
 
